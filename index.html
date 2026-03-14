@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EarningsIQ — AI Earnings Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy:#050d1a; --navy2:#0a1628; --navy3:#0f1f38; --card:#0d1b30;
+  --border:rgba(99,179,237,0.12); --border2:rgba(99,179,237,0.22);
+  --accent:#3b82f6; --accent2:#06b6d4; --gold:#f59e0b;
+  --green:#10b981; --red:#ef4444; --yellow:#eab308;
+  --text:#e2e8f0; --muted:#64748b;
+  --mono:'DM Mono',monospace; --display:'Syne',sans-serif; --body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--navy);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+#app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px;}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:28px 0 24px;border-bottom:1px solid var(--border);}
+.logo{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#fff;}
+.logo span{color:var(--accent);}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.badge{font-family:var(--mono);font-size:11px;color:var(--accent2);border:1px solid rgba(6,182,212,0.3);padding:4px 10px;border-radius:4px;letter-spacing:0.05em;}
+.demo-launch-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;background:linear-gradient(90deg,rgba(59,130,246,0.15),rgba(6,182,212,0.15));border:1px solid rgba(59,130,246,0.35);color:var(--accent2);font-family:var(--body);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.demo-launch-btn:hover{border-color:var(--accent2);}
+.demo-pulse{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;}
+.keys-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--body);transition:all 0.2s;}
+.keys-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* HERO */
+.hero{padding:72px 0 56px;text-align:center;animation:fadeUp 0.7s ease both;}
+.hero-label{font-family:var(--mono);font-size:11px;color:var(--accent2);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:20px;}
+.hero h1{font-family:var(--display);font-size:clamp(36px,5vw,60px);font-weight:800;line-height:1.05;letter-spacing:-1.5px;color:#fff;margin-bottom:20px;}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{color:var(--muted);font-size:17px;max-width:540px;margin:0 auto 40px;}
+
+/* UPLOAD */
+.upload-section{animation:fadeUp 0.7s 0.15s ease both;}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:16px;padding:56px 40px;text-align:center;cursor:pointer;transition:all 0.25s;background:var(--card);position:relative;overflow:hidden;}
+.upload-zone::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:300px;height:120px;background:radial-gradient(ellipse,rgba(59,130,246,0.08) 0%,transparent 70%);pointer-events:none;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(59,130,246,0.04);}
+.upload-zone.demo-hl{border-color:var(--accent2)!important;box-shadow:0 0 0 4px rgba(6,182,212,0.2);}
+.upload-icon{width:52px;height:52px;margin:0 auto 16px;background:rgba(59,130,246,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.upload-zone h3{font-family:var(--display);font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;}
+.upload-zone p{color:var(--muted);font-size:14px;margin-bottom:20px;}
+#fileInput{display:none;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:8px;font-family:var(--body);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#2563eb;transform:translateY(-1px);}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border2);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.paste-section{margin-top:16px;}
+.paste-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;display:block;}
+textarea#pasteInput{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:13px;padding:14px 16px;resize:vertical;min-height:120px;outline:none;transition:border 0.2s;}
+textarea#pasteInput:focus{border-color:var(--accent);}
+textarea#pasteInput::placeholder{color:var(--muted);}
+textarea#pasteInput.demo-hl{border-color:var(--accent2)!important;box-shadow:0 0 0 3px rgba(6,182,212,0.15);}
+.analyze-btn{width:100%;padding:15px;margin-top:14px;font-family:var(--display);font-size:16px;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.25s;letter-spacing:0.02em;}
+.analyze-btn:hover{opacity:0.9;transform:translateY(-1px);box-shadow:0 8px 24px rgba(59,130,246,0.25);}
+.analyze-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.analyze-btn.demo-hl{box-shadow:0 0 0 4px rgba(6,182,212,0.3),0 8px 24px rgba(59,130,246,0.4)!important;}
+
+/* LOADING */
+#loadingView{display:none;padding:80px 0;text-align:center;animation:fadeUp 0.4s ease both;}
+.spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 24px;}
+.loading-steps{display:flex;flex-direction:column;gap:10px;max-width:340px;margin:24px auto 0;}
+.loading-step{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;color:var(--muted);transition:color 0.3s;}
+.loading-step.active{color:var(--accent2);}
+.loading-step.done{color:var(--green);}
+.step-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background 0.3s;}
+.loading-step.active .step-dot{background:var(--accent2);}
+.loading-step.done .step-dot{background:var(--green);}
+
+/* DASHBOARD */
+#dashboard{display:none;animation:fadeUp 0.5s ease both;}
+.dash-header{display:flex;align-items:flex-start;justify-content:space-between;padding:40px 0 28px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:16px;}
+.dash-company{font-family:var(--display);font-size:26px;font-weight:800;color:#fff;}
+.dash-meta{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px;}
+.verdict-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-family:var(--display);font-size:15px;font-weight:700;}
+.verdict-bull{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.25);}
+.verdict-bear{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.verdict-hold{background:rgba(245,158,11,0.12);color:var(--gold);border:1px solid rgba(245,158,11,0.25);}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:28px 0;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;transition:border-color 0.2s;}
+.kpi-card:hover{border-color:var(--border2);}
+.kpi-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;}
+.kpi-value{font-family:var(--display);font-size:24px;font-weight:700;color:#fff;}
+.kpi-delta{font-family:var(--mono);font-size:12px;margin-top:4px;}
+.delta-up{color:var(--green);} .delta-down{color:var(--red);} .delta-neutral{color:var(--muted);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.full-col{margin-bottom:16px;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 24px;transition:border-color 0.3s,box-shadow 0.3s;}
+.card.demo-hl{border-color:var(--accent2)!important;box-shadow:0 0 0 3px rgba(6,182,212,0.15),0 0 30px rgba(6,182,212,0.08);}
+.card-title{font-family:var(--display);font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title .dot{width:7px;height:7px;border-radius:50%;}
+.summary-list{list-style:none;display:flex;flex-direction:column;gap:12px;}
+.summary-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.55;color:var(--text);}
+.summary-list li::before{content:'→';color:var(--accent);font-family:var(--mono);flex-shrink:0;margin-top:1px;}
+.risk-list{display:flex;flex-direction:column;gap:8px;}
+.risk-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;}
+.risk-red{background:rgba(239,68,68,0.08);border-left:3px solid var(--red);color:#fca5a5;}
+.risk-yellow{background:rgba(234,179,8,0.08);border-left:3px solid var(--yellow);color:#fde68a;}
+.risk-green{background:rgba(16,185,129,0.08);border-left:3px solid var(--green);color:#6ee7b7;}
+.risk-badge{font-family:var(--mono);font-size:10px;font-weight:500;flex-shrink:0;padding:2px 6px;border-radius:4px;letter-spacing:0.05em;margin-top:1px;}
+.risk-red .risk-badge{background:rgba(239,68,68,0.2);color:var(--red);}
+.risk-yellow .risk-badge{background:rgba(234,179,8,0.2);color:var(--yellow);}
+.risk-green .risk-badge{background:rgba(16,185,129,0.2);color:var(--green);}
+.qa-list{display:flex;flex-direction:column;gap:10px;}
+.qa-item{padding:12px 16px;border-radius:8px;background:var(--navy3);border:1px solid var(--border);}
+.qa-q{font-size:13px;color:var(--accent2);font-weight:500;margin-bottom:4px;}
+.qa-a{font-size:13px;color:var(--muted);}
+.qa-tag{display:inline-block;margin-left:8px;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:3px;vertical-align:middle;}
+.tag-probe{background:rgba(245,158,11,0.15);color:var(--gold);}
+.tag-pos{background:rgba(16,185,129,0.15);color:var(--green);}
+.tag-skeptic{background:rgba(239,68,68,0.15);color:var(--red);}
+.tone-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.tone-label{font-family:var(--mono);font-size:12px;color:var(--muted);width:90px;flex-shrink:0;}
+.tone-bar-bg{flex:1;height:6px;background:var(--navy3);border-radius:3px;overflow:hidden;}
+.tone-bar-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.tone-val{font-family:var(--mono);font-size:12px;color:var(--text);width:36px;text-align:right;flex-shrink:0;}
+
+/* CHAT */
+.chat-section{margin:28px 0 48px;border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color 0.3s,box-shadow 0.3s;}
+.chat-section.demo-hl{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(6,182,212,0.15);}
+.chat-header{background:var(--card);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.chat-header-title{font-family:var(--display);font-size:14px;font-weight:700;}
+.chat-pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.chat-messages{background:var(--navy2);min-height:180px;max-height:320px;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.msg{display:flex;gap:10px;align-items:flex-start;}
+.msg-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.msg-ai .msg-avatar{background:rgba(59,130,246,0.2);color:var(--accent);}
+.msg-user .msg-avatar{background:rgba(6,182,212,0.2);color:var(--accent2);}
+.msg-bubble{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.55;max-width:85%;}
+.msg-user .msg-bubble{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.2);}
+.chat-input-row{display:flex;gap:10px;padding:14px 16px;background:var(--card);border-top:1px solid var(--border);}
+.chat-input{flex:1;background:var(--navy2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--body);font-size:14px;padding:10px 14px;outline:none;transition:border 0.2s;}
+.chat-input:focus{border-color:var(--accent);}
+.chat-input::placeholder{color:var(--muted);}
+.chat-send{padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--body);transition:background 0.2s;}
+.chat-send:hover{background:#2563eb;}
+.chat-send:disabled{opacity:0.5;cursor:not-allowed;}
+.export-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.export-text{font-size:14px;color:var(--muted);}
+.export-text strong{color:var(--text);}
+.reset-btn{background:none;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;font-family:var(--body);transition:all 0.2s;}
+.reset-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── DEMO OVERLAY ── */
+#demoOverlay{display:none;position:fixed;inset:0;z-index:9000;pointer-events:none;}
+#demoOverlay.active{display:block;}
+#demoBackdrop{position:absolute;inset:0;background:rgba(5,13,26,0.8);transition:opacity 0.3s;}
+#demoTooltip{
+  position:fixed;max-width:360px;min-width:280px;
+  background:var(--navy3);border:1px solid rgba(6,182,212,0.45);
+  border-radius:16px;padding:22px 24px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.7),0 0 0 1px rgba(6,182,212,0.1);
+  pointer-events:all;z-index:9100;transition:top 0.4s cubic-bezier(0.4,0,0.2,1),left 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.tt-step{font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+.tt-title{font-family:var(--display);font-size:17px;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.2;}
+.tt-text{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.tt-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.tt-dots{display:flex;gap:6px;}
+.tt-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:background 0.2s;}
+.tt-dot.on{background:var(--accent2);}
+.tt-btns{display:flex;gap:8px;}
+.tBtn{padding:7px 16px;border-radius:7px;font-size:13px;font-family:var(--body);cursor:pointer;border:none;transition:all 0.2s;font-weight:500;}
+.tBtn-skip{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.tBtn-skip:hover{color:var(--text);border-color:var(--border2);}
+.tBtn-next{background:var(--accent);color:#fff;}
+.tBtn-next:hover{background:#2563eb;}
+.tBtn-finish{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+
+/* VOICE BAR */
+#voiceBar{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--navy3);border:1px solid rgba(6,182,212,0.35);border-radius:40px;padding:10px 20px;display:none;align-items:center;gap:12px;z-index:9200;box-shadow:0 8px 32px rgba(0,0,0,0.5);min-width:260px;pointer-events:all;}
+#voiceBar.on{display:flex;}
+.v-waves{display:flex;align-items:center;gap:3px;height:18px;}
+.v-bar{width:3px;background:var(--accent2);border-radius:2px;animation:wave 0.8s ease infinite;}
+.v-bar:nth-child(1){height:6px;animation-delay:0s;}
+.v-bar:nth-child(2){height:14px;animation-delay:0.1s;}
+.v-bar:nth-child(3){height:10px;animation-delay:0.2s;}
+.v-bar:nth-child(4){height:16px;animation-delay:0.3s;}
+.v-bar:nth-child(5){height:8px;animation-delay:0.4s;}
+.v-text{font-family:var(--mono);font-size:12px;color:var(--accent2);flex:1;}
+.v-stop{background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--mono);transition:all 0.2s;}
+.v-stop:hover{border-color:var(--red);color:var(--red);}
+
+/* API KEY MODAL */
+#apiModal{display:none;position:fixed;inset:0;background:rgba(5,13,26,0.88);z-index:9999;align-items:center;justify-content:center;}
+#apiModal.on{display:flex;}
+.modal-box{background:var(--navy3);border:1px solid var(--border2);border-radius:20px;padding:32px;max-width:480px;width:90%;box-shadow:0 40px 80px rgba(0,0,0,0.7);}
+.modal-title{font-family:var(--display);font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.modal-field{margin-bottom:14px;}
+.modal-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.modal-input{width:100%;background:var(--navy2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 14px;outline:none;transition:border 0.2s;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-hint{font-size:12px;color:var(--muted);margin-top:6px;}
+.modal-hint a{color:var(--accent2);}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.modal-save{flex:1;padding:11px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--body);}
+.modal-skip{padding:11px 20px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-size:13px;cursor:pointer;font-family:var(--body);transition:all 0.2s;}
+.modal-skip:hover{border-color:var(--border2);color:var(--text);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+@keyframes wave{0%,100%{transform:scaleY(0.5);}50%{transform:scaleY(1.2);}}
+footer{border-top:1px solid var(--border);padding:20px 0;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.05em;}
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div id="apiModal">
+  <div class="modal-box">
+    <div class="modal-title">Configure API Keys</div>
+    <div class="modal-sub">Add your keys to enable live AI analysis and ElevenLabs voice narration. Stored locally in your browser only — never sent anywhere else.</div>
+    <div class="modal-field">
+      <span class="modal-label">Anthropic API Key (Claude)</span>
+      <input class="modal-input" type="password" id="claudeKeyInput" placeholder="sk-ant-..."/>
+      <div class="modal-hint">Get yours at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+    </div>
+    <div class="modal-field">
+      <span class="modal-label">ElevenLabs API Key (Voice)</span>
+      <input class="modal-input" type="password" id="elevenKeyInput" placeholder="Your ElevenLabs API key"/>
+      <div class="modal-hint">Get yours at <a href="https://elevenlabs.io" target="_blank">elevenlabs.io</a> — free tier works</div>
+    </div>
+    <div class="modal-field">
+      <span class="modal-label">ElevenLabs Voice ID <span style="color:var(--muted);font-size:10px">(optional)</span></span>
+      <input class="modal-input" type="text" id="voiceIdInput" placeholder="Leave blank for Adam (default)"/>
+      <div class="modal-hint">Find Voice IDs in your ElevenLabs dashboard under Voices</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-save" onclick="saveKeys()">Save &amp; Continue</button>
+      <button class="modal-skip" onclick="closeModal()">Skip (no voice)</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE BAR -->
+<div id="voiceBar">
+  <div class="v-waves">
+    <div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div>
+    <div class="v-bar"></div><div class="v-bar"></div>
+  </div>
+  <span class="v-text" id="voiceText">Speaking...</span>
+  <button class="v-stop" onclick="stopVoice()">Stop</button>
+</div>
+
+<!-- DEMO OVERLAY -->
+<div id="demoOverlay">
+  <div id="demoBackdrop"></div>
+  <div id="demoTooltip">
+    <div class="tt-step" id="ttStep">Step 1 of 8</div>
+    <div class="tt-title" id="ttTitle">Welcome to EarningsIQ</div>
+    <div class="tt-text" id="ttText">Let me walk you through how this works.</div>
+    <div class="tt-controls">
+      <div class="tt-dots" id="ttDots"></div>
+      <div class="tt-btns">
+        <button class="tBtn tBtn-skip" onclick="endDemo()">Skip</button>
+        <button class="tBtn tBtn-next" id="ttNext" onclick="demoNext()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="logo">Earnings<span>IQ</span></div>
+    <div class="header-right">
+      <span class="badge">POWERED BY CLAUDE AI</span>
+      <button class="demo-launch-btn" onclick="launchDemo()">
+        <span class="demo-pulse"></span>Watch demo
+      </button>
+      <button class="keys-btn" onclick="openModal()">⚙ API Keys</button>
+    </div>
+  </header>
+
+  <!-- UPLOAD VIEW -->
+  <div id="uploadView">
+    <div class="hero">
+      <div class="hero-label">Institutional-grade earnings intelligence</div>
+      <h1>Analyze any earnings call<br/><em>in seconds</em></h1>
+      <p>Upload a transcript and get a full investor-grade brief — sentiment, risk flags, financial metrics, and AI-powered insights.</p>
+    </div>
+    <div class="upload-section">
+      <div class="upload-zone" id="dropZone">
+        <div class="upload-icon">📄</div>
+        <h3 id="dropTitle">Drop your transcript here</h3>
+        <p>Supports PDF or plain text files</p>
+        <input type="file" id="fileInput" accept=".txt,.pdf"/>
+        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Choose file</button>
+      </div>
+      <div class="paste-section">
+        <span class="paste-label">Or paste transcript text directly</span>
+        <textarea id="pasteInput" placeholder="Paste earnings call transcript here — try Apple, NVIDIA, or Tesla's latest call..."></textarea>
+      </div>
+      <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()">Analyze Earnings Call →</button>
+    </div>
+  </div>
+
+  <!-- LOADING VIEW -->
+  <div id="loadingView">
+    <div class="spinner"></div>
+    <div style="font-family:var(--display);font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">Analyzing transcript...</div>
+    <div style="color:var(--muted);font-size:14px;">Claude is reading the full call</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="step1"><div class="step-dot"></div>Parsing transcript structure</div>
+      <div class="loading-step" id="step2"><div class="step-dot"></div>Extracting financial metrics</div>
+      <div class="loading-step" id="step3"><div class="step-dot"></div>Scoring sentiment timeline</div>
+      <div class="loading-step" id="step4"><div class="step-dot"></div>Flagging risks and signals</div>
+      <div class="loading-step" id="step5"><div class="step-dot"></div>Generating investor brief</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboard">
+    <div class="dash-header">
+      <div>
+        <div class="dash-company" id="dashCompany">—</div>
+        <div class="dash-meta" id="dashMeta">—</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="verdict-chip" id="verdictChip">—</div>
+        <button class="reset-btn" onclick="resetApp()">← New analysis</button>
+      </div>
+    </div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="export-bar">
+      <span class="export-text">Report ready — <strong id="exportName">earnings-analysis.txt</strong></span>
+      <button class="btn btn-outline" onclick="exportReport()">⬇ Download report</button>
+    </div>
+    <div class="two-col">
+      <div class="card" id="cardSummary">
+        <div class="card-title"><span class="dot" style="background:var(--accent)"></span>Executive summary</div>
+        <ul class="summary-list" id="summaryList"></ul>
+      </div>
+      <div class="card" id="cardSentiment">
+        <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>Sentiment analysis</div>
+        <div id="toneSection"></div>
+        <div style="margin-top:16px;height:140px;"><canvas id="sentimentChart"></canvas></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card" id="cardTopics">
+        <div class="card-title"><span class="dot" style="background:var(--gold)"></span>Topic breakdown</div>
+        <div style="height:220px;"><canvas id="topicChart"></canvas></div>
+      </div>
+      <div class="card" id="cardTone">
+        <div class="card-title"><span class="dot" style="background:var(--green)"></span>Management tone</div>
+        <div id="toneTracker"></div>
+      </div>
+    </div>
+    <div class="full-col card" id="cardRisks">
+      <div class="card-title"><span class="dot" style="background:var(--red)"></span>Risk flags &amp; signals</div>
+      <div class="risk-list" id="riskList"></div>
+    </div>
+    <div class="full-col card" id="cardQA" style="margin-bottom:16px;">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>Q&amp;A analyst insights</div>
+      <div class="qa-list" id="qaList"></div>
+    </div>
+    <div class="chat-section" id="chatSection">
+      <div class="chat-header">
+        <div class="chat-pulse"></div>
+        <div class="chat-header-title">Ask about this earnings call</div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg msg-ai">
+          <div class="msg-avatar">AI</div>
+          <div class="msg-bubble">I've read the full transcript. Ask me anything — management tone, specific metrics, risk factors, or guidance details.</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chatInput" placeholder="e.g. What did the CFO say about margins?" onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="chat-send" id="chatSend" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>EARNINGSIQ · AI-POWERED · NOT FINANCIAL ADVICE · FOR EDUCATIONAL USE ONLY</footer>
+</div>
+
+<script>
+// ─── KEYS ───
+let CLAUDE_KEY = localStorage.getItem('eq_claude') || '';
+let ELEVEN_KEY = localStorage.getItem('eq_eleven') || '';
+let VOICE_ID   = localStorage.getItem('eq_voice')  || 'pNInz6obpgDQGcFmaJgB'; // Adam
+
+function openModal() { document.getElementById('apiModal').classList.add('on'); }
+function closeModal() { document.getElementById('apiModal').classList.remove('on'); }
+function saveKeys() {
+  CLAUDE_KEY = document.getElementById('claudeKeyInput').value.trim();
+  ELEVEN_KEY = document.getElementById('elevenKeyInput').value.trim();
+  const vid   = document.getElementById('voiceIdInput').value.trim();
+  if (vid) VOICE_ID = vid;
+  if (CLAUDE_KEY) localStorage.setItem('eq_claude', CLAUDE_KEY);
+  if (ELEVEN_KEY) localStorage.setItem('eq_eleven', ELEVEN_KEY);
+  if (vid) localStorage.setItem('eq_voice', VOICE_ID);
+  closeModal();
+}
+
+// ─── VOICE ───
+let currentAudio = null;
+async function speak(text) {
+  if (!ELEVEN_KEY) return;
+  stopVoice();
+  const bar = document.getElementById('voiceBar');
+  document.getElementById('voiceText').textContent = text.slice(0,60) + (text.length>60?'…':'');
+  bar.classList.add('on');
+  try {
+    const res = await fetch('/api/speak', {
+      method: 'POST',
+      headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voiceId: VOICE_ID })
+    });
+    if (!res.ok) {
+      console.error('ElevenLabs error:', res.status);
+      bar.classList.remove('on');
+      // Fallback to browser TTS
+      if (window.speechSynthesis) {
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.rate = 0.92; utt.pitch = 1.0;
+        utt.onend = () => bar.classList.remove('on');
+        window.speechSynthesis.speak(utt);
+      }
+      return;
+    }
+    const arrayBuffer = await res.arrayBuffer();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+    const source = audioCtx.createBufferSource();
+    source.buffer = decoded;
+    source.connect(audioCtx.destination);
+    source.onended = () => { bar.classList.remove('on'); audioCtx.close(); };
+    source.start(0);
+    currentAudio = { pause: () => { try { source.stop(); audioCtx.close(); } catch(e){} } };
+  } catch(e) { bar.classList.remove('on'); }
+}
+function stopVoice() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  document.getElementById('voiceBar').classList.remove('on');
+}
+
+// ─── DEMO STEPS ───
+const DEMO_STEPS = [
+  {
+    title: 'Welcome to EarningsIQ',
+    text: 'This is an AI-powered earnings call analyzer. What used to take a Goldman Sachs analyst two hours now takes fifteen seconds. Let me show you how it works.',
+    target: null,
+    voice: 'Welcome to EarningsIQ — an AI-powered earnings call analyzer. What used to take a Goldman Sachs analyst two hours now takes fifteen seconds. Let me show you exactly how it works.',
+    action: null
+  },
+  {
+    title: 'Step 1 — Upload your transcript',
+    text: 'Drag and drop any earnings call transcript here, or choose a file. You can also paste text directly below. We support TXT and PDF formats.',
+    target: 'dropZone',
+    voice: 'Start by pasting any public earnings call transcript into this box. We are going to use NVIDIA\'s most recent quarterly call — one of the most watched earnings events on Wall Street.',
+    action: null
+  },
+  {
+    title: 'Step 2 — Paste your transcript',
+    text: 'Copy any transcript from The Motley Fool, Seeking Alpha, or a company\'s investor relations page and paste it here. We\'ll auto-fill a sample for this demo.',
+    target: 'pasteInput',
+    voice: 'Copy any transcript from The Motley Fool or a company investor relations page and paste it here. We will now auto-fill a sample NVIDIA transcript for this walkthrough.',
+    action: () => {
+      document.getElementById('pasteInput').value = SAMPLE_TRANSCRIPT;
+    }
+  },
+  {
+    title: 'Step 3 — Hit Analyze',
+    text: 'One click sends the full transcript to Claude AI. It reads every word — prepared remarks, Q&A, management tone — and builds your complete investor brief.',
+    target: 'analyzeBtn',
+    voice: 'Hit Analyze, and Claude AI immediately goes to work — parsing the transcript, extracting financial metrics, scoring sentiment, and flagging every risk signal.',
+    action: null
+  },
+  {
+    title: 'Step 4 — Investor verdict & KPIs',
+    text: 'At the top you get an instant verdict — Bullish, Bearish, or Hold — with all key financial metrics auto-extracted: revenue, EPS, margins, and guidance.',
+    target: 'kpiGrid',
+    voice: 'At the top — an immediate investor verdict. Bullish, Bearish, or Hold — with a one-sentence rationale. Below that, all key financial metrics are automatically extracted with directional indicators.',
+    action: null,
+    needsDash: true
+  },
+  {
+    title: 'Step 5 — Sentiment timeline',
+    text: 'This chart shows how the tone of the call evolved — from prepared remarks into Q&A. When confidence dips during analyst questioning, that\'s a signal experienced investors watch closely.',
+    target: 'cardSentiment',
+    voice: 'This sentiment timeline shows exactly how the tone evolved across the call. You can see confidence was high during prepared remarks, then dipped during analyst Q and A. That\'s a signal experienced investors watch closely.',
+    action: null,
+    needsDash: true
+  },
+  {
+    title: 'Step 6 — Risk flags',
+    text: 'Every risk signal is color-coded. Red is a hard warning — guidance cuts, litigation. Yellow is hedging language. Green flags the beats and positive signals.',
+    target: 'cardRisks',
+    voice: 'Every risk flag is color-coded. Red means a hard warning — something like a guidance cut or litigation mention. Yellow is a soft concern. Green flags the beats and positive signals.',
+    action: null,
+    needsDash: true
+  },
+  {
+    title: 'Step 7 — Ask the AI anything',
+    text: 'Finally, ask any follow-up question about the call. The AI has read every word of the transcript and answers with specific data — not generic summaries.',
+    target: 'chatSection',
+    voice: 'And finally — you can ask the AI anything about the call directly. It has read every word of the transcript and answers with specific data. Try asking: what did the CFO say about margins?',
+    action: null,
+    needsDash: true
+  }
+];
+
+let demoStep = 0;
+let demoActive = false;
+
+function launchDemo() {
+  // If no keys set, open modal first
+  if (!CLAUDE_KEY && !ELEVEN_KEY) {
+    openModal();
+    // after modal close, demo will start via saveKeys → but user can also skip
+    // We just open modal; they can skip and demo runs without voice
+    setTimeout(() => { if (!demoActive) startDemoFlow(); }, 300);
+    return;
+  }
+  startDemoFlow();
+}
+
+function startDemoFlow() {
+  demoStep = 0;
+  demoActive = true;
+  document.getElementById('demoOverlay').classList.add('active');
+  renderDemoStep();
+}
+
+function renderDemoStep() {
+  const s = DEMO_STEPS[demoStep];
+  const total = DEMO_STEPS.length;
+
+  // If step needs dashboard and it's not visible, skip to a step that matches view
+  const dashVisible = document.getElementById('dashboard').style.display === 'block';
+  if (s.needsDash && !dashVisible) {
+    // Show a message that they need to run analysis first
+    document.getElementById('ttStep').textContent = 'Demo paused';
+    document.getElementById('ttTitle').textContent = 'Run the analysis first';
+    document.getElementById('ttText').textContent = 'Click "Analyze Earnings Call" to process the transcript. The demo will continue from the dashboard once it loads.';
+    positionTooltip('analyzeBtn');
+    document.getElementById('ttNext').textContent = 'Got it';
+    document.getElementById('ttNext').onclick = endDemo;
+    buildDots(demoStep, total);
+    return;
+  }
+
+  // Run action
+  if (s.action) s.action();
+
+  // Update tooltip
+  document.getElementById('ttStep').textContent = `Step ${demoStep + 1} of ${total}`;
+  document.getElementById('ttTitle').textContent = s.title;
+  document.getElementById('ttText').textContent = s.text;
+
+  // Dots
+  buildDots(demoStep, total);
+
+  // Next / Finish button
+  const btn = document.getElementById('ttNext');
+  if (demoStep === total - 1) {
+    btn.textContent = 'Finish ✓';
+    btn.className = 'tBtn tBtn-finish';
+    btn.onclick = endDemo;
+  } else {
+    btn.textContent = 'Next →';
+    btn.className = 'tBtn tBtn-next';
+    btn.onclick = demoNext;
+  }
+
+  // Highlight target
+  clearHighlights();
+  if (s.target) {
+    const el = document.getElementById(s.target);
+    if (el) {
+      el.classList.add('demo-hl');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      positionTooltip(s.target);
+    } else {
+      centerTooltip();
+    }
+  } else {
+    centerTooltip();
+  }
+
+  // Speak
+  if (s.voice) speak(s.voice);
+}
+
+function buildDots(current, total) {
+  const c = document.getElementById('ttDots');
+  c.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'tt-dot' + (i === current ? ' on' : '');
+    c.appendChild(d);
+  }
+}
+
+function positionTooltip(targetId) {
+  const el = document.getElementById(targetId);
+  const tt = document.getElementById('demoTooltip');
+  if (!el) { centerTooltip(); return; }
+  const r = el.getBoundingClientRect();
+  const tw = 360; const th = 200;
+  const margin = 16;
+  let top, left;
+  // Prefer below
+  if (r.bottom + th + margin < window.innerHeight) {
+    top = r.bottom + margin;
+  } else {
+    top = Math.max(margin, r.top - th - margin);
+  }
+  // Center horizontally on target
+  left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(margin, Math.min(left, window.innerWidth - tw - margin));
+  tt.style.top  = top  + 'px';
+  tt.style.left = left + 'px';
+}
+
+function centerTooltip() {
+  const tt = document.getElementById('demoTooltip');
+  tt.style.top  = '50%';
+  tt.style.left = '50%';
+  tt.style.transform = 'translate(-50%, -50%)';
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.demo-hl').forEach(el => el.classList.remove('demo-hl'));
+  // reset transform on tooltip
+  document.getElementById('demoTooltip').style.transform = '';
+}
+
+function demoNext() {
+  demoStep++;
+  if (demoStep >= DEMO_STEPS.length) { endDemo(); return; }
+  renderDemoStep();
+}
+
+function endDemo() {
+  demoActive = false;
+  stopVoice();
+  clearHighlights();
+  document.getElementById('demoOverlay').classList.remove('active');
+}
+
+// ─── SAMPLE TRANSCRIPT ───
+const SAMPLE_TRANSCRIPT = `NVIDIA Corporation Q4 Fiscal Year 2025 Earnings Call
+
+Operator: Good afternoon. Welcome to NVIDIA's fourth quarter fiscal 2025 earnings conference call.
+
+Jensen Huang (CEO): Thank you. Our Q4 revenue was $39.3 billion, up 78% year on year. Full year revenue reached $130.5 billion, up 114%. Data Center revenue was $35.6 billion in Q4, driven by strong demand for Hopper and early Blackwell shipments.
+
+Colette Kress (CFO): Our GAAP gross margin was 73.5%. Operating income was $23.5 billion. We returned $8.9 billion to shareholders through buybacks and dividends. Q1 guidance is $43 billion, plus or minus 2%.
+
+Jensen Huang: Blackwell demand is extraordinary. We shipped more Blackwell in Q4 than we expected for the entire quarter. Every cloud provider, enterprise, and sovereign AI initiative is racing to build AI infrastructure. The age of agentic AI is driving a new wave of investment.
+
+Analyst (Morgan Stanley): Jensen, can you talk about supply constraints? Are you able to meet demand?
+
+Jensen Huang: Supply is tight but improving. We are working with TSMC and our supply chain partners around the clock. We expect supply to increase meaningfully through fiscal 2026. The demand signal we are seeing is unlike anything we have experienced.
+
+Analyst (Goldman Sachs): Colette, on gross margins — you guided 70.6% for Q1 which is a step down. Can you explain?
+
+Colette Kress: Blackwell has a different cost structure early in the ramp. As we scale production through the year, we expect margins to recover toward the mid-70s. This is a normal pattern for a major new architecture launch.
+
+Analyst (JPMorgan): Any concerns about export controls or China revenue?
+
+Jensen Huang: China revenue was approximately 13% of Data Center in Q4, down from prior levels due to export controls. We are designing products that comply with current regulations and serve markets we are permitted to serve. We remain cautious about the regulatory environment.
+
+Jensen Huang: Looking ahead, I have never been more confident in our position. Blackwell is ramping, Rubin is in development, and the total addressable market for AI infrastructure is measured in trillions of dollars. NVIDIA is the infrastructure company of the AI era.`;
+
+// ─── FILE HANDLING ───
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0]; if (f) readFile(f);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) readFile(e.target.files[0]); });
+function readFile(f) {
+  const r = new FileReader();
+  r.onload = ev => {
+    document.getElementById('pasteInput').value = ev.target.result;
+    document.getElementById('dropTitle').textContent = '✓ ' + f.name;
+  };
+  r.readAsText(f);
+}
+
+// ─── ANALYSIS ───
+let transcriptText = '';
+let analysisData = null;
+let sentChart = null;
+let topChart = null;
+
+async function startAnalysis() {
+  const text = document.getElementById('pasteInput').value.trim();
+  if (text.length < 80) { alert('Please paste a transcript first.'); return; }
+  transcriptText = text;
+  showView('loading');
+  animSteps();
+  try {
+    const data = await callClaude(text);
+    analysisData = data;
+    showView('dashboard');
+    renderDashboard(data);
+  } catch(e) {
+    showView('upload');
+    alert('Error: ' + e.message);
+  }
+}
+
+function generateMockData(text) {
+  // Detect company from transcript
+  let company = 'Company Inc.';
+  let quarter = 'Q4 2024';
+  if (text.toLowerCase().includes('nvidia')) { company = 'NVIDIA Corporation'; quarter = 'Q4 FY2025'; }
+  else if (text.toLowerCase().includes('apple')) { company = 'Apple Inc.'; quarter = 'Q1 FY2025'; }
+  else if (text.toLowerCase().includes('tesla')) { company = 'Tesla Inc.'; quarter = 'Q4 2024'; }
+  else if (text.toLowerCase().includes('microsoft')) { company = 'Microsoft Corporation'; quarter = 'Q2 FY2025'; }
+  else if (text.toLowerCase().includes('amazon')) { company = 'Amazon.com Inc.'; quarter = 'Q4 2024'; }
+  else if (text.toLowerCase().includes('google') || text.toLowerCase().includes('alphabet')) { company = 'Alphabet Inc.'; quarter = 'Q4 2024'; }
+  else if (text.toLowerCase().includes('meta')) { company = 'Meta Platforms Inc.'; quarter = 'Q4 2024'; }
+
+  // Detect sentiment from keywords
+  const positiveWords = (text.match(/(growth|record|beat|strong|exceeded|raised|increased|momentum|accelerating|outperform)/gi) || []).length;
+  const negativeWords = (text.match(/(decline|miss|weak|challenging|headwinds|uncertainty|reduced|decreased|cautious|concern)/gi) || []).length;
+  const sentimentScore = Math.min(95, Math.max(35, 60 + (positiveWords - negativeWords) * 2));
+  const verdict = sentimentScore > 70 ? 'BULL' : sentimentScore < 50 ? 'BEAR' : 'HOLD';
+
+  return {
+    company, quarter, date: 'February 2025',
+    verdict,
+    verdictReason: verdict === 'BULL'
+      ? 'Management tone was confident with strong forward guidance and multiple metric beats.'
+      : verdict === 'BEAR'
+      ? 'Multiple risk factors identified with cautious guidance and margin pressure signals.'
+      : 'Mixed signals with solid execution offset by macro uncertainty and competitive pressure.',
+    kpis: [
+      { label: 'Revenue', value: '$28.4B', delta: '+12% YoY', direction: 'up' },
+      { label: 'EPS', value: '$2.18', delta: 'vs $2.04 est', direction: 'up' },
+      { label: 'Gross Margin', value: '68.2%', delta: '+1.4% QoQ', direction: 'up' },
+      { label: 'Guidance', value: '$29.1B', delta: 'next quarter', direction: 'up' }
+    ],
+    summary: [
+      'Revenue exceeded analyst consensus estimates driven by strong demand across core business segments.',
+      'Management raised full-year guidance signaling confidence in sustained growth trajectory.',
+      'Gross margin expansion reflects favorable product mix and ongoing operational efficiency gains.',
+      'Capital allocation strategy remains disciplined with continued investment in R&D and share buybacks.'
+    ],
+    sentiment: { overall: sentimentScore, prepared: Math.min(95, sentimentScore + 8), qa: Math.max(35, sentimentScore - 8), confidence: sentimentScore },
+    toneMetrics: [
+      { label: 'Confidence', score: Math.min(92, sentimentScore + 5) },
+      { label: 'Optimism', score: sentimentScore },
+      { label: 'Caution', score: Math.max(15, 80 - sentimentScore) },
+      { label: 'Hedging', score: Math.max(10, 70 - sentimentScore) }
+    ],
+    topics: [
+      { label: 'Revenue growth', pct: 28 },
+      { label: 'Margins & costs', pct: 22 },
+      { label: 'Product roadmap', pct: 18 },
+      { label: 'Competition', pct: 14 },
+      { label: 'Macro outlook', pct: 10 },
+      { label: 'Capital allocation', pct: 8 }
+    ],
+    risks: [
+      { level: negativeWords > 3 ? 'red' : 'yellow', text: 'Macro uncertainty cited as ongoing risk factor with potential impact on enterprise spending cycles' },
+      { level: 'yellow', text: 'Supply chain normalization still in progress with isolated constraints in specific component categories' },
+      { level: 'yellow', text: 'Foreign exchange headwinds expected to impact international revenue by approximately 2-3% next quarter' },
+      { level: 'green', text: 'Revenue beat consensus estimates demonstrating strong underlying demand and execution quality' },
+      { level: 'green', text: 'Gross margin expansion signals improving unit economics and favorable product mix shift' },
+      { level: 'green', text: 'Management raised forward guidance reflecting confidence in business momentum' }
+    ],
+    qa: [
+      { question: 'How should we think about margin sustainability going into next year?', tag: 'probe', answer: 'Management expressed confidence in maintaining current margin levels citing operational leverage and mix shift toward higher-margin products.' },
+      { question: 'Can you speak to the competitive landscape and market share dynamics?', tag: 'skeptic', answer: 'Executives acknowledged increased competition but emphasized differentiated product portfolio and customer relationships as key moats.' },
+      { question: 'What is driving the acceleration in your core segment?', tag: 'positive', answer: 'Management attributed growth to strong enterprise adoption, new product launches, and expanding addressable market driven by secular tailwinds.' }
+    ]
+  };
+}
+
+function animSteps() {
+  ['step1','step2','step3','step4','step5'].forEach((id,i) => {
+    setTimeout(() => {
+      for (let j=0;j<i;j++) {
+        const el = document.getElementById('step'+(j+1));
+        el.classList.remove('active'); el.classList.add('done');
+      }
+      document.getElementById(id).classList.add('active');
+    }, i * 1800);
+  });
+}
+
+async function callClaude(transcript) {
+  if (!CLAUDE_KEY) throw new Error('No Anthropic API key set. Click ⚙ API Keys to add one.');
+  const sys = `You are an expert financial analyst. Analyze the earnings call transcript and return ONLY raw JSON (no markdown, no code blocks) with this exact structure:
+{"company":"string","quarter":"string","date":"string","verdict":"BULL|BEAR|HOLD","verdictReason":"string","kpis":[{"label":"string","value":"string","delta":"string","direction":"up|down|neutral"}],"summary":["string"],"sentiment":{"overall":0,"prepared":0,"qa":0,"confidence":0},"toneMetrics":[{"label":"string","score":0}],"topics":[{"label":"string","pct":0}],"risks":[{"level":"red|yellow|green","text":"string"}],"qa":[{"question":"string","tag":"probe|positive|skeptic","answer":"string"}]}
+Scores are 0-100. Extract real data. Return ONLY the JSON.`;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': CLAUDE_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 2000,
+      system: sys,
+      messages: [{ role: 'user', content: 'Analyze this transcript:\n\n' + transcript.slice(0, 12000) }]
+    })
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API error ' + res.status); }
+  const d = await res.json();
+  const raw = d.content[0].text.trim().replace(/^```json\s*/,'').replace(/```\s*$/,'').trim();
+  return JSON.parse(raw);
+}
+
+// ─── VIEWS ───
+function showView(v) {
+  document.getElementById('uploadView').style.display  = v==='upload'   ? 'block' : 'none';
+  document.getElementById('loadingView').style.display = v==='loading'  ? 'block' : 'none';
+  document.getElementById('dashboard').style.display   = v==='dashboard'? 'block' : 'none';
+}
+
+function resetApp() {
+  transcriptText=''; analysisData=null;
+  document.getElementById('pasteInput').value='';
+  document.getElementById('dropTitle').textContent='Drop your transcript here';
+  ['step1','step2','step3','step4','step5'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active','done');
+  });
+  if (sentChart){sentChart.destroy();sentChart=null;}
+  if (topChart){topChart.destroy();topChart=null;}
+  document.getElementById('chatMessages').innerHTML=`<div class="msg msg-ai"><div class="msg-avatar">AI</div><div class="msg-bubble">I've read the full transcript. Ask me anything.</div></div>`;
+  showView('upload');
+}
+
+// ─── RENDER DASHBOARD ───
+function renderDashboard(d) {
+  document.getElementById('dashCompany').textContent = d.company||'Earnings Analysis';
+  document.getElementById('dashMeta').textContent = (d.quarter||'') + (d.date?' · '+d.date:'') + ' · Earnings Call';
+  document.getElementById('exportName').textContent = (d.company||'earnings').replace(/\s+/g,'-').toLowerCase()+'.txt';
+
+  const vc = document.getElementById('verdictChip');
+  const v = (d.verdict||'HOLD').toUpperCase();
+  vc.textContent = v==='BULL'?'▲ BULLISH':v==='BEAR'?'▼ BEARISH':'◆ HOLD';
+  vc.className = 'verdict-chip verdict-'+(v==='BULL'?'bull':v==='BEAR'?'bear':'hold');
+
+  document.getElementById('kpiGrid').innerHTML = (d.kpis||[]).map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-delta ${k.direction==='up'?'delta-up':k.direction==='down'?'delta-down':'delta-neutral'}">${k.direction==='up'?'▲':k.direction==='down'?'▼':'—'} ${k.delta}</div>
+    </div>`).join('');
+
+  document.getElementById('summaryList').innerHTML = (d.summary||[]).map(s=>`<li>${s}</li>`).join('');
+
+  const sent = d.sentiment||{};
+  document.getElementById('toneSection').innerHTML = [
+    {label:'Overall',val:sent.overall||65},
+    {label:'Prepared',val:sent.prepared||70},
+    {label:'Q&A',val:sent.qa||60},
+    {label:'Confidence',val:sent.confidence||65}
+  ].map(t=>`<div class="tone-row"><div class="tone-label">${t.label}</div><div class="tone-bar-bg"><div class="tone-bar-fill" style="width:${t.val}%;background:${t.val>70?'var(--green)':t.val>50?'var(--accent)':'var(--red)'}"></div></div><div class="tone-val">${t.val}</div></div>`).join('');
+
+  if (sentChart) sentChart.destroy();
+  const pts = genCurve(sent.prepared||70,sent.qa||60,sent.overall||65);
+  sentChart = new Chart(document.getElementById('sentimentChart').getContext('2d'),{
+    type:'line',
+    data:{labels:pts.map((_,i)=>i===0?'Open':i===pts.length-1?'Close':''),datasets:[{data:pts,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',fill:true,tension:0.45,pointRadius:0,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#64748b',font:{size:11,family:'DM Mono'}}},y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#64748b',font:{size:11,family:'DM Mono'},stepSize:25}}}}
+  });
+
+  if (topChart) topChart.destroy();
+  const topics = d.topics||[];
+  topChart = new Chart(document.getElementById('topicChart').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:topics.map(t=>t.label),datasets:[{data:topics.map(t=>t.pct),backgroundColor:['#3b82f6','#06b6d4','#10b981','#f59e0b','#8b5cf6','#ef4444'],borderColor:'#0a1628',borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:12,family:'DM Sans'},boxWidth:12,padding:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}%`}}}}
+  });
+
+  document.getElementById('toneTracker').innerHTML = (d.toneMetrics||[]).map(t=>`<div class="tone-row"><div class="tone-label">${t.label}</div><div class="tone-bar-bg"><div class="tone-bar-fill" style="width:${t.score}%;background:${t.label==='Hedging'||t.label==='Caution'?'var(--yellow)':'var(--accent2)'}"></div></div><div class="tone-val">${t.score}</div></div>`).join('');
+
+  document.getElementById('riskList').innerHTML = (d.risks||[]).map(r=>`<div class="risk-item risk-${r.level}"><span class="risk-badge">${r.level.toUpperCase()}</span>${r.text}</div>`).join('');
+
+  document.getElementById('qaList').innerHTML = (d.qa||[]).map(q=>`<div class="qa-item"><div class="qa-q">Q: ${q.question}<span class="qa-tag tag-${q.tag}">${q.tag}</span></div><div class="qa-a">${q.answer}</div></div>`).join('');
+}
+
+function genCurve(s,e,m) {
+  const pts=[];
+  for(let i=0;i<20;i++){
+    const t=i/19;
+    const base=t<0.5?s+(m-s)*(t*2):m+(e-m)*((t-0.5)*2);
+    pts.push(Math.round(Math.min(100,Math.max(0,base+(Math.random()-0.5)*10))));
+  }
+  return pts;
+}
+
+// ─── CHAT ───
+async function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const q = inp.value.trim();
+  if (!q || !transcriptText) return;
+  const btn = document.getElementById('chatSend');
+  btn.disabled = true; inp.value = '';
+  appendMsg('user', q);
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':CLAUDE_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-3-5-sonnet-20241022',max_tokens:400,
+        system:'You are a financial analyst. Answer questions about the earnings call transcript concisely. Cite specific data. 2-4 sentences max.',
+        messages:[{role:'user',content:`Transcript:\n${transcriptText.slice(0,8000)}\n\nQuestion: ${q}`}]
+      })
+    });
+    const d = await res.json();
+    appendMsg('ai', d.content[0].text);
+  } catch(e) { appendMsg('ai','Could not process that. Please try again.'); }
+  btn.disabled = false;
+}
+
+function appendMsg(role, text) {
+  const c = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-'+(role==='ai'?'ai':'user');
+  div.innerHTML = `<div class="msg-avatar">${role==='ai'?'AI':'You'}</div><div class="msg-bubble">${text}</div>`;
+  c.appendChild(div);
+  c.scrollTop = c.scrollHeight;
+}
+
+// ─── EXPORT ───
+function exportReport() {
+  if (!analysisData) return;
+  const d = analysisData;
+  const txt = `EARNINGSIQ REPORT\n${d.company} — ${d.quarter} ${d.date}\nVerdict: ${d.verdict} — ${d.verdictReason}\n\nSUMMARY\n${(d.summary||[]).map((s,i)=>`${i+1}. ${s}`).join('\n')}\n\nKEY METRICS\n${(d.kpis||[]).map(k=>`${k.label}: ${k.value} (${k.delta})`).join('\n')}\n\nRISK FLAGS\n${(d.risks||[]).map(r=>`[${r.level.toUpperCase()}] ${r.text}`).join('\n')}\n\nQ&A\n${(d.qa||[]).map(q=>`Q: ${q.question}\nA: ${q.answer}`).join('\n\n')}\n\n---\nGenerated by EarningsIQ · Not financial advice`;
+  const blob = new Blob([txt],{type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=document.getElementById('exportName').textContent; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── INIT ───
+// Pre-fill saved keys into modal inputs
+document.getElementById('claudeKeyInput').value = CLAUDE_KEY;
+document.getElementById('elevenKeyInput').value = ELEVEN_KEY;
+</script>
+</body>
+</html>
